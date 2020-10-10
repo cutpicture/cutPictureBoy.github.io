@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html  lang="zh">
+<head>
+    <meta charset="utf-8" />
+
+<meta name="generator" content="Hexo 3.8.0" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
+<title>Vue 运行流程 - Cut Picture Boy 的博客</title>
+
+
+    <meta name="description" content="本文通过梳理Vue源码，分析Vue的运行流程，代码环境为web/runtime-with-compiler 第一步 设置core Vue首先声明Vue的构造函数，及其原型方法，主要为initMixin、stateMixin、eventsMixin、lifecycleMixin和renderMixin。function Vue (options) &amp;#123;  if (process.env.NO">
+<meta name="keywords" content="Web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vue 运行流程">
+<meta property="og:url" content="https://cutpictureboy.github.io/2019/03/15/Vue运行流程/index.html">
+<meta property="og:site_name" content="Cut Picture Boy 的博客">
+<meta property="og:description" content="本文通过梳理Vue源码，分析Vue的运行流程，代码环境为web/runtime-with-compiler 第一步 设置core Vue首先声明Vue的构造函数，及其原型方法，主要为initMixin、stateMixin、eventsMixin、lifecycleMixin和renderMixin。function Vue (options) &amp;#123;  if (process.env.NO">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cutpictureboy.github.io/images/animal-photography-animals-big-cats-39629.jpg">
+<meta property="og:updated_time" content="2020-04-01T15:34:32.675Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Vue 运行流程">
+<meta name="twitter:description" content="本文通过梳理Vue源码，分析Vue的运行流程，代码环境为web/runtime-with-compiler 第一步 设置core Vue首先声明Vue的构造函数，及其原型方法，主要为initMixin、stateMixin、eventsMixin、lifecycleMixin和renderMixin。function Vue (options) &amp;#123;  if (process.env.NO">
+<meta name="twitter:image" content="https://cutpictureboy.github.io/images/animal-photography-animals-big-cats-39629.jpg">
+
+
+
+
+
+
+
+<link rel="icon" href="/images/logo.svg">
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.7.2/css/bulma.css">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.18.1/styles/atom-one-light.css">
+
+
+    
+    
+<style>body>.footer,body>.navbar,body>.section{opacity:0}</style>
+
+    
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/css/lightgallery.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/css/justifiedGallery.min.css">
+
+    
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/outdatedbrowser@1.1.5/outdatedbrowser/outdatedbrowser.min.css">
+
+    
+    
+    
+    
+<link rel="stylesheet" href="/css/back-to-top.css">
+
+    
+    
+    
+    
+    
+    
+    
+    <link rel="stylesheet" href="/css/progressbar.css">
+<script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+    
+    <link rel="stylesheet" href="/css/font.css">
+    
+    
+    
+
+
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="is-2-column">
+    <nav class="navbar navbar-main">
+    <div class="container">
+        <div class="navbar-brand is-flex-center">
+            <a class="navbar-item navbar-logo" href="/">
+            
+                <img src="/images/logo.svg" alt="Vue 运行流程" height="28">
+            
+            </a>
+        </div>
+        <div class="navbar-menu">
+            
+            <div class="navbar-start">
+                
+                <a class="navbar-item"
+                href="/">首页</a>
+                
+                <a class="navbar-item"
+                href="/archives">归档</a>
+                
+                <a class="navbar-item"
+                href="/notes">随笔</a>
+                
+            </div>
+            
+            <div class="navbar-end">
+                
+                    
+                    <a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/cutpictureboy">
+                        
+                        <i class="fab fa-github"></i>
+                        
+                    </a>
+                    
+                
+                
+                
+                <a class="navbar-item search" title="搜索" href="javascript:;">
+                    <i class="fas fa-search"></i>
+                </a>
+                
+            </div>
+        </div>
+    </div>
+</nav>
+    
+    <section class="section">
+        <div class="container">
+            <div class="columns">
+                <div class="column is-8-tablet is-9-desktop is-9-widescreen has-order-2 column-main">
+<div class="card">
+    
+    <div class="card-image">
+        <span  class="image is-7by1">
+            <img class="thumbnail" src="/images/animal-photography-animals-big-cats-39629.jpg" alt="Vue 运行流程">
+        </span>
+    </div>
+    
+    <div class="card-content article ">
+        
+        <div class="level article-meta is-size-7 is-uppercase is-mobile is-overflow-x-auto">
+            <div class="level-left">
+                <time class="level-item has-text-grey" datetime="2019-03-15T03:14:16.000Z">2019-03-15</time>
+                
+                
+                <span class="level-item has-text-grey">
+                    
+                    
+                    20 分钟 读完 (大约 2947 个字)
+                </span>
+                
+                
+            </div>
+        </div>
+        
+        <h1 class="title is-size-3 is-size-4-mobile has-text-weight-normal">
+            
+                Vue 运行流程
+            
+        </h1>
+        <div class="content">
+            <p>本文通过梳理Vue源码，分析Vue的运行流程，代码环境为<code>web/runtime-with-compiler</code></p>
+<h3 id="第一步-设置core-Vue"><a href="#第一步-设置core-Vue" class="headerlink" title="第一步 设置core Vue"></a>第一步 设置core Vue</h3><p>首先声明Vue的构造函数，及其原型方法，主要为<code>initMixin</code>、<code>stateMixin</code>、<code>eventsMixin</code>、<code>lifecycleMixin</code>和<code>renderMixin</code>。<br><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Vue</span> (<span class="params">options</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (process.env.NODE_ENV !== <span class="string">'production'</span> &amp;&amp;</span><br><span class="line">    !(<span class="keyword">this</span> <span class="keyword">instanceof</span> Vue)</span><br><span class="line">  ) &#123;</span><br><span class="line">    warn(<span class="string">'Vue is a constructor and should be called with the `new` keyword'</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">this</span>._init(options)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">initMixin(Vue)</span><br><span class="line">stateMixin(Vue)</span><br><span class="line">eventsMixin(Vue)</span><br><span class="line">lifecycleMixin(Vue)</span><br><span class="line">renderMixin(Vue)</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> Vue</span><br></pre></td></tr></table></figure></p>
+<a id="more"></a>
+<ol>
+<li><p>initMixin<br><code>initMixin</code> 主要是给设置<code>_init</code>原型函数。从代码中可以看出，_init主要是做合并配置项，根据配置项一步步初始化数据，并回调生命周期的钩子。其中<code>initLifecycle</code>、<code>initEvents</code>、<code>initRender</code>在<code>init</code>生命周期执行，<code>initInjections</code>, <code>initState</code>, <code>initProvide</code>在<code>create</code>生命周期执行。最后就是<code>vm.$mount</code>进入<code>mount</code>生命周期。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">initMixin</span> (<span class="params">Vue: Class&lt;Component&gt;</span>) </span>&#123;</span><br><span class="line">  Vue.prototype._init = <span class="function"><span class="keyword">function</span> (<span class="params">options?: Object</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">const</span> vm: Component = <span class="keyword">this</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (options &amp;&amp; options._isComponent) &#123;</span><br><span class="line">      initInternalComponent(vm, options)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      vm.$options = mergeOptions(</span><br><span class="line">        resolveConstructorOptions(vm.constructor),</span><br><span class="line">        options || &#123;&#125;,</span><br><span class="line">        vm</span><br><span class="line">      )</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    vm._self = vm</span><br><span class="line">    initLifecycle(vm)</span><br><span class="line">    initEvents(vm)</span><br><span class="line">    initRender(vm)</span><br><span class="line">    callHook(vm, <span class="string">'beforeCreate'</span>)</span><br><span class="line">    initInjections(vm) <span class="comment">// resolve injections before data/props</span></span><br><span class="line">    initState(vm)</span><br><span class="line">    initProvide(vm) <span class="comment">// resolve provide after data/props</span></span><br><span class="line">    callHook(vm, <span class="string">'created'</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (vm.$options.el) &#123;</span><br><span class="line">      vm.$mount(vm.$options.el)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>stateMixin<br><code>stateMixin</code>主要是做了对Vue实例上源数据对象(data 和 props)代理，以禁止直接对数据进行修改，同时设置<code>$set</code>, <code>delete</code>, <code>$watch</code>等对数据进行修改的原型函数。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">stateMixin</span> (<span class="params">Vue: Class&lt;Component&gt;</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// flow somehow has problems with directly declared definition object</span></span><br><span class="line">  <span class="comment">// when using Object.defineProperty, so we have to procedurally build up</span></span><br><span class="line">  <span class="comment">// the object here.</span></span><br><span class="line">  <span class="keyword">const</span> dataDef = &#123;&#125;</span><br><span class="line">  dataDef.get = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123; <span class="keyword">return</span> <span class="keyword">this</span>._data &#125;</span><br><span class="line">  <span class="keyword">const</span> propsDef = &#123;&#125;</span><br><span class="line">  propsDef.get = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123; <span class="keyword">return</span> <span class="keyword">this</span>._props &#125;</span><br><span class="line">  <span class="built_in">Object</span>.defineProperty(Vue.prototype, <span class="string">'$data'</span>, dataDef)</span><br><span class="line">  <span class="built_in">Object</span>.defineProperty(Vue.prototype, <span class="string">'$props'</span>, propsDef)</span><br><span class="line"></span><br><span class="line">  Vue.prototype.$set = set</span><br><span class="line">  Vue.prototype.$<span class="keyword">delete</span> = del</span><br><span class="line"></span><br><span class="line">  Vue.prototype.$watch = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;...&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>eventsMixin<br><code>eventsMixin</code> 主要是设置<code>$on</code>、<code>$once</code>、<code>$off</code>、<code>$emit</code>原型函数。从代码也能看出，所有的事件都被放在实例上的<code>_events</code>对象中，而每个<code>_events[event]</code>皆是一个数组。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">eventsMixin</span> (<span class="params">Vue: Class&lt;Component&gt;</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> hookRE = <span class="regexp">/^hook:/</span></span><br><span class="line">  Vue.prototype.$on = <span class="function"><span class="keyword">function</span> (<span class="params">event: string | Array&lt;string&gt;, fn: Function</span>): <span class="title">Component</span> </span>&#123;</span><br><span class="line">    <span class="keyword">const</span> vm: Component = <span class="keyword">this</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">Array</span>.isArray(event)) &#123;</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>, l = event.length; i &lt; l; i++) &#123;</span><br><span class="line">        vm.$on(event[i], fn)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      (vm._events[event] || (vm._events[event] = [])).push(fn)</span><br><span class="line">      <span class="comment">// optimize hook:event cost by using a boolean flag marked at registration</span></span><br><span class="line">      <span class="comment">// instead of a hash lookup</span></span><br><span class="line">      <span class="keyword">if</span> (hookRE.test(event)) &#123;</span><br><span class="line">        vm._hasHookEvent = <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> vm</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  Vue.prototype.$once = ...</span><br><span class="line">  Vue.prototype.$off = ...</span><br><span class="line">  Vue.prototype.$emit = ...</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>lifecycleMixin<br><code>lifecycleMixin</code>主要设置了<code>_update</code>、<code>$forceUpdate</code>、<code>$destroy</code>原型函数，<code>_update</code>主要将新老Vnode使用diff算法进行比较，然后更新html，<code>$forceUpdate</code>为强制刷新该实例，<code>$destroy</code>为销毁该实例。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">lifecycleMixin</span> (<span class="params">Vue: Class&lt;Component&gt;</span>) </span>&#123;</span><br><span class="line">  Vue.prototype._update = <span class="function"><span class="keyword">function</span> (<span class="params">vnode: VNode, hydrating?: boolean</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">const</span> vm: Component = <span class="keyword">this</span></span><br><span class="line">    <span class="keyword">const</span> prevEl = vm.$el</span><br><span class="line">    <span class="keyword">const</span> prevVnode = vm._vnode</span><br><span class="line">    <span class="keyword">const</span> restoreActiveInstance = setActiveInstance(vm)</span><br><span class="line">    vm._vnode = vnode</span><br><span class="line">    <span class="comment">// Vue.prototype.__patch__ is injected in entry points</span></span><br><span class="line">    <span class="comment">// based on the rendering backend used.</span></span><br><span class="line">    <span class="keyword">if</span> (!prevVnode) &#123;</span><br><span class="line">      <span class="comment">// initial render</span></span><br><span class="line">      vm.$el = vm.__patch__(vm.$el, vnode, hydrating, <span class="literal">false</span> <span class="comment">/* removeOnly */</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// updates</span></span><br><span class="line">      vm.$el = vm.__patch__(prevVnode, vnode)</span><br><span class="line">    &#125;</span><br><span class="line">    restoreActiveInstance()</span><br><span class="line">    <span class="comment">// update __vue__ reference</span></span><br><span class="line">    <span class="keyword">if</span> (prevEl) &#123;</span><br><span class="line">      prevEl.__vue__ = <span class="literal">null</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (vm.$el) &#123;</span><br><span class="line">      vm.$el.__vue__ = vm</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// if parent is an HOC, update its $el as well</span></span><br><span class="line">    <span class="keyword">if</span> (vm.$vnode &amp;&amp; vm.$parent &amp;&amp; vm.$vnode === vm.$parent._vnode) &#123;</span><br><span class="line">      vm.$parent.$el = vm.$el</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  Vue.prototype.$forceUpdate = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">const</span> vm: Component = <span class="keyword">this</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 通知该vm上的所有watch，让他们执行update方法</span></span><br><span class="line">    <span class="keyword">if</span> (vm._watcher) &#123;</span><br><span class="line">      vm._watcher.update()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  Vue.prototype.$destroy = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;...&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>renderMixin<br><code>renderMixin</code>主要给Vue的原型上创建<code>$nextTick</code>和<code>_render</code>和跟渲染相关的函数，<code>_render</code>函数根据组件选项里的<code>render</code>函数生成新的VNode虚拟dom节点</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">renderMixin</span> (<span class="params">Vue: Class&lt;Component&gt;</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// install runtime convenience helpers</span></span><br><span class="line">  installRenderHelpers(Vue.prototype)</span><br><span class="line"></span><br><span class="line">  Vue.prototype.$nextTick = <span class="function"><span class="keyword">function</span> (<span class="params">fn: Function</span>) </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">  Vue.prototype._render = <span class="function"><span class="keyword">function</span> (<span class="params"></span>): <span class="title">VNode</span> </span>&#123;</span><br><span class="line">    <span class="keyword">const</span> vm: Component = <span class="keyword">this</span></span><br><span class="line">    <span class="keyword">const</span> &#123; render, _parentVnode &#125; = vm.$options</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (_parentVnode) &#123;</span><br><span class="line">      vm.$scopedSlots = normalizeScopedSlots(</span><br><span class="line">        _parentVnode.data.scopedSlots,</span><br><span class="line">        vm.$slots,</span><br><span class="line">        vm.$scopedSlots</span><br><span class="line">      )</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// set parent vnode. this allows render functions to have access</span></span><br><span class="line">    <span class="comment">// to the data on the placeholder node.</span></span><br><span class="line">    vm.$vnode = _parentVnode</span><br><span class="line">    <span class="comment">// render self</span></span><br><span class="line">    <span class="keyword">let</span> vnode</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">// There's no need to maintain a stack becaues all render fns are called</span></span><br><span class="line">      <span class="comment">// separately from one another. Nested component's render fns are called</span></span><br><span class="line">      <span class="comment">// when parent component is patched.</span></span><br><span class="line">      currentRenderingInstance = vm</span><br><span class="line">      vnode = render.call(vm._renderProxy, vm.$createElement)</span><br><span class="line">    &#125; <span class="keyword">catch</span> (e) &#123;</span><br><span class="line">      vnode = vm._vnode</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      currentRenderingInstance = <span class="literal">null</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// if the returned array contains only a single node, allow it</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">Array</span>.isArray(vnode) &amp;&amp; vnode.length === <span class="number">1</span>) &#123;</span><br><span class="line">      vnode = vnode[<span class="number">0</span>]</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// return empty vnode in case the render function errored out</span></span><br><span class="line">    <span class="keyword">if</span> (!(vnode <span class="keyword">instanceof</span> VNode)) &#123;</span><br><span class="line">      vnode = createEmptyVNode()</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// set parent</span></span><br><span class="line">    vnode.parent = _parentVnode</span><br><span class="line">    <span class="keyword">return</span> vnode</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>根据环境设置特殊的原型函数<br>当对浏览器环境打包vue时，若运行环境不为浏览器，则<code>__patch__</code>函数为<code>() =&gt; {}</code>(不采取任何操作)<br>设置浏览器环境下的<code>$mount</code>函数，挂载element元素(<code>hydrating</code>选项代表服务器渲染)</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">Vue.prototype.__patch__ = inBrowser ? patch : noop</span><br><span class="line">Vue.prototype.$mount = <span class="function"><span class="keyword">function</span> (<span class="params"></span></span></span><br><span class="line"><span class="function"><span class="params">  el?: string | Element,</span></span></span><br><span class="line"><span class="function"><span class="params">  hydrating?: boolean</span></span></span><br><span class="line"><span class="function"><span class="params"></span>): <span class="title">Component</span> </span>&#123;...&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="第二步-实例化-Vue"><a href="#第二步-实例化-Vue" class="headerlink" title="第二步 实例化 Vue"></a>第二步 实例化 Vue</h3><p>当新实例化一个Vue类时，根据<code>initMixin</code>里设置的初始化函数</p>
+<p>Vue 双向绑定原理：<br>当对某个对象上的某个属性使用<code>defineReactive</code>或<code>observe</code>的时候，会新建一个<code>Dep</code>实例，当获取对象上这个属性的值时，该<code>Dep</code>和<code>Watch</code>进行绑定，当对这个值进行修改的时候，该<code>Dep</code>通知绑定它的<code>Watch</code>们更新。<br><img src="/images/1606edad5ca9e23d.jpg" alt=""></p>
+<ol>
+<li><p>合并配置项<br>在Vue中，有两种Vue实例，一种是Vue组件(VueComponent)，一种是根Vue实例(Vue)，VueComponent挂载在根Vue实例上，根Vue实例再挂载到某Element元素上，例如下面代码中，<code>App.vue</code>是一个<code>VueComponent</code>，<code>new Vue(...)</code>是一个根Vue实例。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// VueComponent</span></span><br><span class="line"><span class="keyword">import</span> App <span class="keyword">from</span> <span class="string">'./App.vue'</span></span><br><span class="line"></span><br><span class="line">Vue.config.productionTip = <span class="literal">false</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 根Vue实例(Vue)</span></span><br><span class="line"><span class="keyword">new</span> Vue(&#123;</span><br><span class="line">  render: <span class="function"><span class="params">h</span> =&gt;</span> h(App),</span><br><span class="line">&#125;).$mount(<span class="string">'#app'</span>)</span><br></pre></td></tr></table></figure>
+<p>在初始化的时候，两个的行为会有不相同，<code>VueComponent</code>需要绑定到父级节点上，且对于events的listeners和props等属性进行合并处理，而根Vue实例只需要合并初始化时传入的配置。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (options &amp;&amp; options._isComponent) &#123;</span><br><span class="line">    <span class="comment">// 对父节点的一些属性进行继承</span></span><br><span class="line">    initInternalComponent(vm, options)</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    vm.$options = mergeOptions(</span><br><span class="line">      resolveConstructorOptions(vm.constructor),</span><br><span class="line">      options || &#123;&#125;,</span><br><span class="line">      vm</span><br><span class="line">    )</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>initLifecycle初始化生命周期<br>initLifecycle主要创建基础的生命周期属性以及<code>$parent</code>、<code>$root</code>、<code>$children</code>、<code>$refs</code>、<code>_watcher</code>等属性。<br><code>$parent</code>为上级Vue实例，<code>$root</code>为根Vue实例，<code>$childre</code>为下级Vue实例，<code>$refs</code>为特别注册的实例或元素对象。<code>_watcher</code>为存放观察者的列表。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">initLifecycle</span> (<span class="params">vm: Component</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> options = vm.$options</span><br><span class="line"></span><br><span class="line">  <span class="comment">// locate first non-abstract parent</span></span><br><span class="line">  <span class="keyword">let</span> parent = options.parent</span><br><span class="line">  <span class="keyword">if</span> (parent &amp;&amp; !options.abstract) &#123;</span><br><span class="line">    <span class="keyword">while</span> (parent.$options.abstract &amp;&amp; parent.$parent) &#123;</span><br><span class="line">      parent = parent.$parent</span><br><span class="line">    &#125;</span><br><span class="line">    parent.$children.push(vm)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  vm.$parent = parent</span><br><span class="line">  vm.$root = parent ? parent.$root : vm</span><br><span class="line"></span><br><span class="line">  vm.$children = []</span><br><span class="line">  vm.$refs = &#123;&#125;</span><br><span class="line"></span><br><span class="line">  vm._watcher = <span class="literal">null</span></span><br><span class="line">  vm._inactive = <span class="literal">null</span></span><br><span class="line">  vm._directInactive = <span class="literal">false</span></span><br><span class="line">  vm._isMounted = <span class="literal">false</span></span><br><span class="line">  vm._isDestroyed = <span class="literal">false</span></span><br><span class="line">  vm._isBeingDestroyed = <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>initEvents 初始化事件<br>初始化<code>_events</code>属性，且如果在上级组件中有给组件绑定监听事件，对监听事件进行处理，将监听的事件调用到实例上的<code>$on</code>方法，添加到<code>_events</code>属性中。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">initEvents</span> (<span class="params">vm: Component</span>) </span>&#123;</span><br><span class="line">  vm._events = <span class="built_in">Object</span>.create(<span class="literal">null</span>)</span><br><span class="line">  vm._hasHookEvent = <span class="literal">false</span></span><br><span class="line">  <span class="comment">// init parent attached events</span></span><br><span class="line">  <span class="keyword">const</span> listeners = vm.$options._parentListeners</span><br><span class="line">  <span class="keyword">if</span> (listeners) &#123;</span><br><span class="line">    updateComponentListeners(vm, listeners)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>initRender 初始化渲染的参数<br>初始化<code>vnode</code>、<code>$slots</code>、<code>$createElement</code>等属性，同时对<code>$attrs</code>和<code>$listeners</code>创建<code>Dep</code></p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">initRender</span> (<span class="params">vm: Component</span>) </span>&#123;</span><br><span class="line">  vm._vnode = <span class="literal">null</span> <span class="comment">// the root of the child tree</span></span><br><span class="line">  vm._staticTrees = <span class="literal">null</span> <span class="comment">// v-once cached trees</span></span><br><span class="line">  <span class="keyword">const</span> options = vm.$options</span><br><span class="line">  <span class="keyword">const</span> parentVnode = vm.$vnode = options._parentVnode <span class="comment">// the placeholder node in parent tree</span></span><br><span class="line">  <span class="keyword">const</span> renderContext = parentVnode &amp;&amp; parentVnode.context</span><br><span class="line">  vm.$slots = resolveSlots(options._renderChildren, renderContext)</span><br><span class="line">  vm.$scopedSlots = emptyObject</span><br><span class="line">  vm._c = <span class="function">(<span class="params">a, b, c, d</span>) =&gt;</span> createElement(vm, a, b, c, d, <span class="literal">false</span>)</span><br><span class="line">  vm.$createElement = <span class="function">(<span class="params">a, b, c, d</span>) =&gt;</span> createElement(vm, a, b, c, d, <span class="literal">true</span>)</span><br><span class="line">  <span class="keyword">const</span> parentData = parentVnode &amp;&amp; parentVnode.data</span><br><span class="line">  defineReactive(vm, <span class="string">'$attrs'</span>, parentData &amp;&amp; parentData.attrs || emptyObject, <span class="literal">null</span>, <span class="literal">true</span>)</span><br><span class="line">  defineReactive(vm, <span class="string">'$listeners'</span>, options._parentListeners || emptyObject, <span class="literal">null</span>, <span class="literal">true</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>callHook(vm, ‘beforeCreate’)<br><code>init</code>阶段完成，并执行<code>beforeCreate</code>的钩子函数。</p>
+</li>
+<li><p>initInjections 初始化注入<br>对于<code>inject</code> 注入的值创建响应式<code>Dep</code>并绑定到实例上，获取值方式为一层一层向上获取父组件的<code>_provided</code>，直到符合要求。</p>
+</li>
+<li><p>initState 初始化数据属性<br>首先创建<code>_watchers</code>数组，用于存放该实例上的观察者，然后对props、methods、data、computed、watch进行初始化。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">initState</span> (<span class="params">vm: Component</span>) </span>&#123;</span><br><span class="line">  vm._watchers = []</span><br><span class="line">  <span class="keyword">const</span> opts = vm.$options</span><br><span class="line">  <span class="keyword">if</span> (opts.props) initProps(vm, opts.props)</span><br><span class="line">  <span class="keyword">if</span> (opts.methods) initMethods(vm, opts.methods)</span><br><span class="line">  <span class="keyword">if</span> (opts.data) &#123;</span><br><span class="line">    initData(vm)</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    observe(vm._data = &#123;&#125;, <span class="literal">true</span> <span class="comment">/* asRootData */</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (opts.computed) initComputed(vm, opts.computed)</span><br><span class="line">  <span class="keyword">if</span> (opts.watch &amp;&amp; opts.watch !== nativeWatch) &#123;</span><br><span class="line">    initWatch(vm, opts.watch)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>initProps 根据父组件传入的<code>propsData</code>获取当value，然后进行<code>defineReactive</code></li>
+<li><p>initData 根据<code>data</code>属性获取到值，并对此对象进行<code>observe</code><br>注1: 对于根<code>Vue</code>而言，<code>data</code>可以为对象，而对于<code>VueComponent</code>来说，<code>data</code>只能是<code>Function</code>，因为根<code>Vue</code>只会被实例化一次，而<code>VueComponent</code>可能被实例话使用多次。<br>注2: <code>observe</code>函数，若传入的值非对象或为VNode则不操作，否则创建一个<code>Observe</code>。<code>Observe</code>对数组类型数据，遍历每一项重新<code>observe</code>，<code>Observe</code>对于普通对象的每一项进行<code>defineReactive</code>。</p>
+</li>
+<li><p>initComputed 为<code>computed</code>中的每一项创建一个<code>Watcher</code>并放入实例上的<code>_computedWatchers</code>。<code>Watcher</code>创建的时候，构造函数自动会执行一次传入的<code>get</code>方法，在此期间，<code>get</code>方法中涉及到的任何参数都会触发其<code>defineReactive</code>时创建的<code>Dep</code>的订阅。因此<code>Dep</code>和此<code>Watcher</code>的绑定就成立了。</p>
+</li>
+<li><p>initWatch 为每一项执行<code>createWatcher</code>而创建一个新的<code>Watcher</code>，并且执行一次<code>get</code>方法，和<code>computed</code>一样绑定<code>Dep</code>和该<code>Watcher</code>之间的依赖。当该项数据发生<code>set</code>时，该<code>Watcher</code>则会执行<code>update</code>，即创建该<code>Watcher</code>时传入的回调函数。</p>
+</li>
+</ul>
+</li>
+<li><p>initProvide<br>对每一项进行取值并放入实例的<code>_provided</code>中</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">initProvide</span> (<span class="params">vm: Component</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> provide = vm.$options.provide</span><br><span class="line">  <span class="keyword">if</span> (provide) &#123;</span><br><span class="line">    vm._provided = <span class="keyword">typeof</span> provide === <span class="string">'function'</span></span><br><span class="line">      ? provide.call(vm)</span><br><span class="line">      : provide</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>callHook(vm, ‘created’)<br><code>create</code>阶段完成，并执行<code>created</code>的钩子函数</p>
+</li>
+</ol>
+<h3 id="第三步-挂载Vue"><a href="#第三步-挂载Vue" class="headerlink" title="第三步 挂载Vue"></a>第三步 挂载Vue</h3><ol>
+<li><p>编译<code>template</code><br><code>Vue</code>有多种打包模式，分为<code>runtime</code>和<code>compile</code>，<code>runtime</code>代表提供<code>Vue</code>的运行环境，<code>compile</code>代表编译环境。若我们所有模版代码都自己写成render函数或通过<code>webpack</code>的<code>vue-loader</code>转为render函数，且代码里不使用template，则<code>compile</code>可以被省略。</p>
+<p>如果未传入<code>render</code>选项，则去检测<code>template</code>选项。若<code>template</code>为id选择器、node节点、或者<code>template</code>不存在而存在<code>el</code>，则对上述内容分别处理，得到<code>template</code>字符串，然后使用<code>compileToFunctions</code>函数将<code>template</code>转为<code>render Function</code>。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (!options.render) &#123;</span><br><span class="line">  <span class="keyword">let</span> template = options.template</span><br><span class="line">  <span class="keyword">if</span> (template) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> template === <span class="string">'string'</span>) &#123;</span><br><span class="line">      <span class="keyword">if</span> (template.charAt(<span class="number">0</span>) === <span class="string">'#'</span>) &#123;</span><br><span class="line">        template = idToTemplate(template)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (template.nodeType) &#123;</span><br><span class="line">      template = template.innerHTML</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">this</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (el) &#123;</span><br><span class="line">    template = getOuterHTML(el)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (template) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> &#123; render, staticRenderFns &#125; = compileToFunctions(template, &#123;</span><br><span class="line">      outputSourceRange: process.env.NODE_ENV !== <span class="string">'production'</span>,</span><br><span class="line">      shouldDecodeNewlines,</span><br><span class="line">      shouldDecodeNewlinesForHref,</span><br><span class="line">      delimiters: options.delimiters,</span><br><span class="line">      comments: options.comments</span><br><span class="line">    &#125;, <span class="keyword">this</span>)</span><br><span class="line">    options.render = render</span><br><span class="line">    options.staticRenderFns = staticRenderFns</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>beforeMount<br>接着正式执行挂载函数<code>mountComponent</code>，首先<code>callHook(vm, &#39;beforeMount&#39;)</code>，然后创建新的<code>Watcher</code>，该<code>Watcher</code>的<code>get</code>方法为<code>updateComponent</code>，用于更新组件，传入<code>before</code>函数为更新组件前的钩子函数。<br>创建<code>Watcher</code>的时候，构造函数里会默认执行一次<code>get</code>函数，即传入的<code>updateComponent</code>，执行<code>_render</code>来获取VNode，接着执行<code>_update</code>来将Vnode 进行patch，再更新到el上面。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">mountComponent</span> (<span class="params"></span></span></span><br><span class="line"><span class="function"><span class="params">  vm: Component,</span></span></span><br><span class="line"><span class="function"><span class="params">  el: ?Element,</span></span></span><br><span class="line"><span class="function"><span class="params">  hydrating?: boolean</span></span></span><br><span class="line"><span class="function"><span class="params"></span>): <span class="title">Component</span> </span>&#123;</span><br><span class="line">  vm.$el = el</span><br><span class="line">  <span class="keyword">if</span> (!vm.$options.render) &#123;</span><br><span class="line">    vm.$options.render = createEmptyVNode</span><br><span class="line">  &#125;</span><br><span class="line">  callHook(vm, <span class="string">'beforeMount'</span>)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">let</span> updateComponent = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">    vm._update(vm._render(), hydrating)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// we set this to vm._watcher inside the watcher's constructor</span></span><br><span class="line">  <span class="comment">// since the watcher's initial patch may call $forceUpdate (e.g. inside child</span></span><br><span class="line">  <span class="comment">// component's mounted hook), which relies on vm._watcher being already defined</span></span><br><span class="line">  <span class="keyword">new</span> Watcher(vm, updateComponent, noop, &#123;</span><br><span class="line">    before () &#123;</span><br><span class="line">      <span class="keyword">if</span> (vm._isMounted &amp;&amp; !vm._isDestroyed) &#123;</span><br><span class="line">        callHook(vm, <span class="string">'beforeUpdate'</span>)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;, <span class="literal">true</span> <span class="comment">/* isRenderWatcher */</span>)</span><br><span class="line">  hydrating = <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// manually mounted instance, call mounted on self</span></span><br><span class="line">  <span class="comment">// mounted is called for render-created child components in its inserted hook</span></span><br><span class="line">  <span class="keyword">if</span> (vm.$vnode == <span class="literal">null</span>) &#123;</span><br><span class="line">    vm._isMounted = <span class="literal">true</span></span><br><span class="line">    callHook(vm, <span class="string">'mounted'</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> vm</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>_render</code> 获取Vnode<br>调用实例上的<code>$createElement</code>来生产Vnode，在此期间，模版里绑定的数据访问会触发<code>defineReactive</code>时的 <code>get</code>，此时，将上一步创建的更新视图<code>Watcher</code>与数据的<code>Dep</code>绑定订阅关系。即当数据改变时，<code>Dep</code>通知该<code>Watcher</code>执行<code>run</code>(<code>updateComponent</code>)。至此，所有的<code>Watcher</code>和<code>Dep</code>全部都以绑定订阅关系完毕。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">vnode = render.call(vm._renderProxy, vm.$createElement)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>_update</code> 更新视图<br>调用<code>patch</code>进行更新视图。如果有preVnode，则对上一步获取的Vnode 和 preVnode 进行patch，更新视图。若不存在preVnode，则对el和Vnode进行patch，使用<code>CreateElm</code>递归创建dom元素</p>
+</li>
+</ol>
+
+        </div>
+        
+        <div class="level is-size-7 is-uppercase">
+            <div class="level-start">
+                <div class="level-item">
+                    <span class="is-size-6 has-text-grey has-mr-7">#</span>
+                    <a class="has-link-grey -link" href="/tags/Web/">Web</a>
+                </div>
+            </div>
+        </div>
+        
+        
+        
+    </div>
+</div>
+
+
+
+
+
+<div class="card card-transparent">
+    <div class="level post-navigation is-flex-wrap is-mobile">
+        
+        <div class="level-start">
+            <a class="level level-item has-link-grey  article-nav-prev" href="/2019/03/18/HTTP2简介/">
+                <i class="level-item fas fa-chevron-left"></i>
+                <span class="level-item">HTTP/2简介</span>
+            </a>
+        </div>
+        
+        
+        <div class="level-end">
+            <a class="level level-item has-link-grey  article-nav-next" href="/2018/05/20/HTTP缓存机制/">
+                <span class="level-item">HTTP缓存机制</span>
+                <i class="level-item fas fa-chevron-right"></i>
+            </a>
+        </div>
+        
+    </div>
+</div>
+
+
+</div>
+                
+
+
+
+
+<div class="column is-4-tablet is-3-desktop is-3-widescreen  has-order-1 column-left is-sticky">
+    
+        
+<div class="card widget">
+    <div class="card-content">
+        <nav class="level">
+            <div class="level-item has-text-centered" style="flex-shrink: 1">
+                <div>
+                    
+                    
+                        <figure class="image is-128x128 has-mb-6">
+                            <img class="" src="/images/avatar1.jpg" alt="Cut Picture Boy">
+                        </figure>
+                      
+                    
+                    <p class="is-size-4 is-block f-laro">
+                        Cut Picture Boy
+                    </p>
+                    
+                    
+                    
+                    <p class="is-size-6 is-flex is-flex-center has-text-grey f-laro">
+                        <i class="fas fa-map-marker-alt has-mr-7"></i>
+                        <span>Shenzhen China</span>
+                    </p>
+                    
+                </div>
+            </div>
+        </nav>
+        <nav class="level is-mobile">
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        文章
+                    </p>
+                    <a href="/archives">
+                        <p class="title has-text-weight-normal">
+                            7
+                        </p>
+                    </a>
+                </div>
+            </div>
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        分类
+                    </p>
+                    <a href="/categories">
+                        <p class="title has-text-weight-normal">
+                            0
+                        </p>
+                    </a>
+                </div>
+            </div>
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        标签
+                    </p>
+                    <a href="/tags">
+                        <p class="title has-text-weight-normal">
+                            4
+                        </p>
+                    </a>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="level">
+            <a class="level-item button is-link is-rounded" href="https://github.com/cutpictureboy" target="_blank" rel="noopener">
+                关注我</a>
+        </div>
+        
+        
+        
+    </div>
+</div>
+    
+        
+    
+        <div class="card widget">
+    <div class="card-content">
+        <div class="menu">
+        <h3 class="menu-label">
+            归档
+        </h3>
+        <ul class="menu-list">
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2020/07/">
+                <span class="level-start">
+                    <span class="level-item">七月 2020</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2020/04/">
+                <span class="level-start">
+                    <span class="level-item">四月 2020</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2019/03/">
+                <span class="level-start">
+                    <span class="level-item">三月 2019</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">4</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2018/05/">
+                <span class="level-start">
+                    <span class="level-item">五月 2018</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+        
+        </ul>
+        </div>
+    </div>
+</div>
+    
+        <div class="card widget">
+    <div class="card-content">
+        <div class="menu">
+            <h3 class="menu-label">
+                标签
+            </h3>
+            <div class="field is-grouped is-grouped-multiline">
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/HTTP/">
+                        <span class="tag">HTTP</span>
+                        <span class="tag is-grey">3</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/Vue/">
+                        <span class="tag">Vue</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/Web/">
+                        <span class="tag">Web</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/前端/">
+                        <span class="tag">前端</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+    
+    
+        <div class="column-right-shadow is-hidden-widescreen ">
+        
+        </div>
+    
+</div>
+
+                
+            </div>
+        </div>
+    </section>
+    <footer class="footer">
+    <div class="container">
+        <div class="level">
+            <div class="level-start has-text-centered-mobile">
+                <a class="footer-logo is-block has-mb-6" href="/">
+                
+                    <img src="/images/logo.svg" alt="Vue 运行流程" height="28">
+                
+                </a>
+                <p class="is-size-7">
+                &copy; 2020 Cut Picture Boy&nbsp;
+                Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> & <a
+                        href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a>
+                
+                </p>
+            </div>
+            <div class="level-end">
+            
+            </div>
+        </div>
+    </div>
+</footer>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script>
+<script>moment.locale("zh-CN");</script>
+
+
+<script>
+var IcarusThemeSettings = {
+    site: {
+        url: 'https://cutpictureboy.github.io',
+        external_link: {"enable":true,"exclude":[]}
+    },
+    article: {
+        highlight: {
+            clipboard: true,
+            fold: 'unfolded'
+        }
+    }
+};
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script>
+
+
+
+
+
+<script src="/js/animation.js"></script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/js/lightgallery.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js" defer></script>
+<script src="/js/gallery.js" defer></script>
+
+
+
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/">Update
+            my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/outdatedbrowser@1.1.5/outdatedbrowser/outdatedbrowser.min.js" defer></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        });
+    });
+</script>
+
+
+
+
+
+<a id="back-to-top" title="回到顶端" href="javascript:;">
+    <i class="fas fa-chevron-up"></i>
+</a>
+<script src="/js/back-to-top.js" defer></script>
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/font.css">
+
+
+
+
+
+<script src="/js/main.js" defer></script>
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="想要查找什么..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+<script src="/js/insight.js" defer></script>
+<link rel="stylesheet" href="/css/search.css">
+<link rel="stylesheet" href="/css/insight.css">
+    
+</body>
+</html>

@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html  lang="zh">
+<head>
+    <meta charset="utf-8" />
+
+<meta name="generator" content="Hexo 3.8.0" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
+<title>HTTP缓存机制 - Cut Picture Boy 的博客</title>
+
+
+    <meta name="description" content="参考缓存详解HTTP缓存 什么是缓存？ 缓存是一种保存资源副本并在下次请求时直接使用该副本的技术。当 web 缓存发现请求的资源已经被存储，它会拦截请求，返回该资源的拷贝，而不会去源服务器重新下载。  为什么需要缓存使用缓存拥有一下优势：  缓解服务器压力，客户端不需要每次去请求资源； 提升性能，由于资源存在于本地，不需要从服务器获取，因此速度更快； 服务器带宽消耗减少；  因此可以得出，使用缓存">
+<meta name="keywords" content="HTTP">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTP缓存机制">
+<meta property="og:url" content="https://cutpictureboy.github.io/2018/05/20/HTTP缓存机制/index.html">
+<meta property="og:site_name" content="Cut Picture Boy 的博客">
+<meta property="og:description" content="参考缓存详解HTTP缓存 什么是缓存？ 缓存是一种保存资源副本并在下次请求时直接使用该副本的技术。当 web 缓存发现请求的资源已经被存储，它会拦截请求，返回该资源的拷贝，而不会去源服务器重新下载。  为什么需要缓存使用缓存拥有一下优势：  缓解服务器压力，客户端不需要每次去请求资源； 提升性能，由于资源存在于本地，不需要从服务器获取，因此速度更快； 服务器带宽消耗减少；  因此可以得出，使用缓存">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cutpictureboy.github.io/images/boy.jpg">
+<meta property="og:updated_time" content="2020-04-01T08:39:51.869Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HTTP缓存机制">
+<meta name="twitter:description" content="参考缓存详解HTTP缓存 什么是缓存？ 缓存是一种保存资源副本并在下次请求时直接使用该副本的技术。当 web 缓存发现请求的资源已经被存储，它会拦截请求，返回该资源的拷贝，而不会去源服务器重新下载。  为什么需要缓存使用缓存拥有一下优势：  缓解服务器压力，客户端不需要每次去请求资源； 提升性能，由于资源存在于本地，不需要从服务器获取，因此速度更快； 服务器带宽消耗减少；  因此可以得出，使用缓存">
+<meta name="twitter:image" content="https://cutpictureboy.github.io/images/boy.jpg">
+
+
+
+
+
+
+
+<link rel="icon" href="/images/logo.svg">
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.7.2/css/bulma.css">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.18.1/styles/atom-one-light.css">
+
+
+    
+    
+<style>body>.footer,body>.navbar,body>.section{opacity:0}</style>
+
+    
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/css/lightgallery.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/css/justifiedGallery.min.css">
+
+    
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/outdatedbrowser@1.1.5/outdatedbrowser/outdatedbrowser.min.css">
+
+    
+    
+    
+    
+<link rel="stylesheet" href="/css/back-to-top.css">
+
+    
+    
+    
+    
+    
+    
+    
+    <link rel="stylesheet" href="/css/progressbar.css">
+<script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+    
+    <link rel="stylesheet" href="/css/font.css">
+    
+    
+    
+
+
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="is-2-column">
+    <nav class="navbar navbar-main">
+    <div class="container">
+        <div class="navbar-brand is-flex-center">
+            <a class="navbar-item navbar-logo" href="/">
+            
+                <img src="/images/logo.svg" alt="HTTP缓存机制" height="28">
+            
+            </a>
+        </div>
+        <div class="navbar-menu">
+            
+            <div class="navbar-start">
+                
+                <a class="navbar-item"
+                href="/">首页</a>
+                
+                <a class="navbar-item"
+                href="/archives">归档</a>
+                
+                <a class="navbar-item"
+                href="/notes">随笔</a>
+                
+            </div>
+            
+            <div class="navbar-end">
+                
+                    
+                    <a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/cutpictureboy">
+                        
+                        <i class="fab fa-github"></i>
+                        
+                    </a>
+                    
+                
+                
+                
+                <a class="navbar-item search" title="搜索" href="javascript:;">
+                    <i class="fas fa-search"></i>
+                </a>
+                
+            </div>
+        </div>
+    </div>
+</nav>
+    
+    <section class="section">
+        <div class="container">
+            <div class="columns">
+                <div class="column is-8-tablet is-9-desktop is-9-widescreen has-order-2 column-main">
+<div class="card">
+    
+    <div class="card-image">
+        <span  class="image is-7by1">
+            <img class="thumbnail" src="/images/boy.jpg" alt="HTTP缓存机制">
+        </span>
+    </div>
+    
+    <div class="card-content article ">
+        
+        <div class="level article-meta is-size-7 is-uppercase is-mobile is-overflow-x-auto">
+            <div class="level-left">
+                <time class="level-item has-text-grey" datetime="2018-05-19T16:42:42.000Z">2018-05-20</time>
+                
+                
+                <span class="level-item has-text-grey">
+                    
+                    
+                    26 分钟 读完 (大约 3849 个字)
+                </span>
+                
+                
+            </div>
+        </div>
+        
+        <h1 class="title is-size-3 is-size-4-mobile has-text-weight-normal">
+            
+                HTTP缓存机制
+            
+        </h1>
+        <div class="content">
+            <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://zhuanlan.zhihu.com/p/33356918">缓存详解</a><br><a href="https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Caching_FAQ">HTTP缓存</a></p>
+<h4 id="什么是缓存？"><a href="#什么是缓存？" class="headerlink" title="什么是缓存？"></a>什么是缓存？</h4><blockquote>
+<p>缓存是一种保存资源副本并在下次请求时直接使用该副本的技术。当 web 缓存发现请求的资源已经被存储，它会拦截请求，返回该资源的拷贝，而不会去源服务器重新下载。</p>
+</blockquote>
+<h4 id="为什么需要缓存"><a href="#为什么需要缓存" class="headerlink" title="为什么需要缓存"></a>为什么需要缓存</h4><p>使用缓存拥有一下优势：</p>
+<ul>
+<li>缓解服务器压力，客户端不需要每次去请求资源；</li>
+<li>提升性能，由于资源存在于本地，不需要从服务器获取，因此速度更快；</li>
+<li>服务器带宽消耗减少；</li>
+</ul>
+<p>因此可以得出，使用缓存可以节约服务器的资源同时让网站的性能更加优秀。但是因为并不是所有资源都是永久不变的，重要的是对一个资源的缓存应截止到其下一次发生改变（即不能缓存过期的资源）。因此，缓存需要合理配置。<br><a id="more"></a></p>
+<h4 id="缓存的分类"><a href="#缓存的分类" class="headerlink" title="缓存的分类"></a>缓存的分类</h4><p>缓存可以分为两类：私有缓存和共享缓存</p>
+<h6 id="私有缓存（浏览器缓存）"><a href="#私有缓存（浏览器缓存）" class="headerlink" title="私有缓存（浏览器缓存）"></a>私有缓存（浏览器缓存）</h6><p>私有缓存只能用于单独用户。你可能已经见过浏览器设置中的“缓存”选项。浏览器缓存拥有用户通过 HTTP 下载的所有文档。这些缓存为浏览过的文档提供向后/向前导航，保存网页，查看源码等功能，可以避免再次向服务器发起多余的请求。它同样可以提供缓存内容的离线浏览。</p>
+<h6 id="共享缓存（代理缓存）"><a href="#共享缓存（代理缓存）" class="headerlink" title="共享缓存（代理缓存）"></a>共享缓存（代理缓存）</h6><p>共享缓存可以被多个用户使用。例如，ISP 或你所在的公司可能会架设一个 web 代理来作为本地网络基础的一部分提供给用户。由于所有的请求都会首先通过代理服务器，因此代理服务器可以对热门的资源进行缓存，其他用户访问热门资源的时候，就可以使用代理缓存的资源而不必从服务器获取，这样热门的资源就会被重复使用，减少网络拥堵与延迟。</p>
+<h4 id="缓存资源类型"><a href="#缓存资源类型" class="headerlink" title="缓存资源类型"></a>缓存资源类型</h4><p>常见的 HTTP 缓存只能存储 GET 响应，对于其他类型的响应则无能为力。缓存的关键主要包括request method和目标URI（一般只有GET请求才会被缓存）。</p>
+<ul>
+<li>一个检索请求的成功响应: 对于 GET请求，响应状态码为：200，则表示为成功。一个包含例如HTML文档，图片，或者文件的响应。</li>
+<li>不变的重定向: 响应状态码：301。</li>
+<li>错误响应: 响应状态码：404 的一个页面。</li>
+<li>不完全的响应: 响应状态码 206，只返回局部的信息。</li>
+<li>除了 GET 请求外，如果匹配到作为一个已被定义的cache键名的响应。</li>
+</ul>
+<h4 id="缓存机制"><a href="#缓存机制" class="headerlink" title="缓存机制"></a>缓存机制</h4><p>浏览器对于缓存的处理是根据<strong>第一次</strong>请求资源时返回的<strong>响应头</strong>来确定的。因此，对于缓存的控制主要是通过配置资源的响应头。</p>
+<p>缓存机制可以分为强缓存和协商缓存两个阶段。是首先进行强缓存的判断，然后进行协商缓存的判断，可以通过下面这样图来理解整个缓存机制。<br><img src="/images/http-cache.jpeg" alt=""></p>
+<h6 id="强缓存"><a href="#强缓存" class="headerlink" title="强缓存"></a>强缓存</h6><p>首先进入强缓存的判定阶段，当向服务器请求一个资源的，若符合浏览器缓存资源的类型，则首先判断本地的缓存里面时候存在该资源。如果该资源不存在，则直接向服务器请求该资源，若该资源存在，进入下一步：判断该资源是否过期。若该资源未过期，则从缓存中读取该资源，若缓存已过期，则进入协商缓存的判定阶段。</p>
+<p>强缓存命中时，Firefox浏览器表现为一个灰色的200状态码，Chrome浏览器状态码表现为<code>200 (from disk cache)</code>或是<code>200 OK (from memory cache)</code>。</p>
+<p>关于缓存是从磁盘中获取还是从内存中获取，通过参考<a href="https://juejin.im/post/5a6c87c46fb9a01ca560b4d7">缓存详解</a>：Chrome会根据本地内存的使用率来决定缓存存放在哪，如果内存使用率很高，放在磁盘里面，内存的使用率很低会暂时放在内存里面。这就可以比较合理的解释了为什么同一个资源有时是<code>from memory cache</code>有时是<code>from disk cache</code>的问题了。</p>
+<h6 id="协商缓存"><a href="#协商缓存" class="headerlink" title="协商缓存"></a>协商缓存</h6><p>当该资源文件已过期后，首先根据第一次资源请求的响应头中的<code>ETAG</code>和<code>Last-Modified</code>来判断客户端带上哪些字段去向服务器验证内容是否修改。</p>
+<p><code>ETag</code> 响应头作为缓存的一种强校验器，可以理解为该资源的版本号，是一个对用户代理(<code>User Agent</code>, 下面简称<code>UA</code>)不透明的值。对于像浏览器这样的<code>HTTP UA</code>，不知道<code>ETag</code>代表什么，不能预测它的值是多少。如果资源请求的响应头里含有ETag, 客户端可以在后续的请求的头中带上 <code>If-None-Match</code> 头来验证缓存。</p>
+<p><code>Last-Modified</code> 响应头可以作为一种弱校验器，表示资源上一次修改的时间。说它弱是因为它只能精确到一秒。如果响应头里含有这个信息，客户端可以在后续的请求中带上 <code>If-Modified-Since</code> 来验证缓存。</p>
+<p>当向服务端发起缓存校验的请求时，服务端会返回 <code>200 ok</code>并在<code>body</code>里附上最新的资源表示返回正常的结果，客户端使用最新的资源并重新缓存该资源，或者服务端返回 304 Not Modified(不返回body)表示浏览器可以使用本地缓存文件。304的响应头也可以同时更新缓存文档的过期时间。</p>
+<h6 id="启发式缓存阶段"><a href="#启发式缓存阶段" class="headerlink" title="启发式缓存阶段"></a>启发式缓存阶段</h6><p>另外存在的一个比较让人忽视，但实际上存在的缓存阶段为启发式缓存阶段，这个阶段表现为资源的响应头信息里不包含资源过期的信息，浏览器此时会根据响应头中2个时间字段 Date 和 Last-Modified 之间的时间差值，取其值的10%作为缓存时间周期。所以当浏览器判断该资源的缓存的日期和当前时间的差是否大于该缓存时间周期，以此来判断资源是否过期。当感觉资源的缓存不受控制时，可以查找这方面的原因。</p>
+<h4 id="缓存相关HTTP首部字段"><a href="#缓存相关HTTP首部字段" class="headerlink" title="缓存相关HTTP首部字段"></a>缓存相关HTTP首部字段</h4><h6 id="字段列表"><a href="#字段列表" class="headerlink" title="字段列表"></a>字段列表</h6><ul>
+<li>通用首部字段</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">字段名称</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Cache-Control</td>
+<td style="text-align:left">控制缓存具体的行为</td>
+</tr>
+<tr>
+<td style="text-align:left">Pragma</td>
+<td style="text-align:left">HTTP1.0时的遗留字段，当值为”no-cache”时强制验证缓存</td>
+</tr>
+<tr>
+<td style="text-align:left">Date</td>
+<td style="text-align:left">创建报文的日期时间(启发式缓存阶段会用到这个字段)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>响应首部字段</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">字段名称</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">ETag</td>
+<td style="text-align:left">服务器生成资源的唯一标识</td>
+</tr>
+<tr>
+<td style="text-align:left">Vary</td>
+<td style="text-align:left">代理服务器缓存的管理信息</td>
+</tr>
+<tr>
+<td style="text-align:left">Age</td>
+<td style="text-align:left">资源在缓存代理中存贮的时长(取决于max-age和s-maxage的大小)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>实体首部字段</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">字段名称</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Expires</td>
+<td style="text-align:left">告知客户端资源缓存失效的绝对时间</td>
+</tr>
+<tr>
+<td style="text-align:left">Last-Modified</td>
+<td style="text-align:left">资源最后一次修改的时间</td>
+</tr>
+</tbody>
+</table>
+<h6 id="字段详解"><a href="#字段详解" class="headerlink" title="字段详解"></a>字段详解</h6><p>1.Cache-Control<br>通过cache-control的指令可以控制告诉客户端或是服务器如何处理缓存。这也是11个字段中指令最多的一个，我们先来看看请求指令：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">指令</th>
+<th style="text-align:left">参数</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">no-cache</td>
+<td style="text-align:left">无</td>
+<td style="text-align:left">强制源服务器再次验证</td>
+</tr>
+<tr>
+<td style="text-align:left">no-store</td>
+<td style="text-align:left">无</td>
+<td style="text-align:left">不缓存请求或是响应的任何内容</td>
+</tr>
+<tr>
+<td style="text-align:left">max-age=[秒]</td>
+<td style="text-align:left">缓存时长，单位是秒</td>
+<td style="text-align:left">缓存的时长，也是响应的最大的Age值</td>
+</tr>
+<tr>
+<td style="text-align:left">min-fresh=[秒]</td>
+<td style="text-align:left">必需</td>
+<td style="text-align:left">期望在指定时间内响应仍然有效</td>
+</tr>
+<tr>
+<td style="text-align:left">no-transform</td>
+<td style="text-align:left">无</td>
+<td style="text-align:left">代理不可更改媒体类型</td>
+</tr>
+<tr>
+<td style="text-align:left">only-if-cached</td>
+<td style="text-align:left">无</td>
+<td style="text-align:left">从缓存获取</td>
+</tr>
+<tr>
+<td style="text-align:left">cache-extension</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">新的指令标记(token)</td>
+</tr>
+</tbody>
+</table>
+<p>响应指令</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">指令</th>
+<th style="text-align:left">参数</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">public</td>
+<td style="text-align:left">无</td>
+<td style="text-align:left">任意一方都能缓存该资源(客户端、代理服务器等)</td>
+</tr>
+<tr>
+<td style="text-align:left">private</td>
+<td style="text-align:left">可省略</td>
+<td style="text-align:left">只能特定用户缓存该资源</td>
+</tr>
+<tr>
+<td style="text-align:left">no-cache</td>
+<td style="text-align:left">可省略</td>
+<td style="text-align:left">缓存前必须先确认其有效性</td>
+</tr>
+<tr>
+<td style="text-align:left">no-store</td>
+<td style="text-align:left">无</td>
+<td style="text-align:left">不缓存请求或响应的任何内容</td>
+</tr>
+<tr>
+<td style="text-align:left">no-transform</td>
+<td style="text-align:left">无</td>
+<td style="text-align:left">代理不可更改媒体类型</td>
+</tr>
+<tr>
+<td style="text-align:left">must-revalidate</td>
+<td style="text-align:left">无</td>
+<td style="text-align:left">可缓存但必须再向源服务器进确认</td>
+</tr>
+<tr>
+<td style="text-align:left">proxy-revalidate</td>
+<td style="text-align:left">无</td>
+<td style="text-align:left">要求中间缓存服务器对缓存的响应有效性再进行确认</td>
+</tr>
+<tr>
+<td style="text-align:left">max-age=[秒]</td>
+<td style="text-align:left">缓存时长，单位是秒</td>
+<td style="text-align:left">缓存的时长，也是响应的最大的Age值</td>
+</tr>
+<tr>
+<td style="text-align:left">s-maxage=[秒]</td>
+<td style="text-align:left">必需</td>
+<td style="text-align:left">公共缓存服务器响应的最大Age值</td>
+</tr>
+<tr>
+<td style="text-align:left">cache-extension</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">新指令标记(token)</td>
+</tr>
+</tbody>
+</table>
+<p>另外，部分指令可以组合使用，比如<br><figure class="highlight http"><table><tr><td class="code"><pre><span class="line"><span class="attribute">Cache-Control</span>: max-age=100, must-revalidate, public</span><br></pre></td></tr></table></figure></p>
+<p>上面指令的意思是缓存的有效时间为100秒，之后访问需要向源服务器发送请求验证，此缓存可被代理服务器和客户端缓存。</p>
+<p>2.Pragma 头<br>Pragma 是HTTP/1.0标准中定义的一个header属性，请求中包含Pragma的效果跟在头信息中定义Cache-Control: no-cache相同，但是HTTP的响应头不支持这个属性，所以它不能拿来完全替代HTTP/1.1中定义的Cache-control头。通常定义Pragma以向后兼容基于HTTP/1.0的客户端。</p>
+<figure class="highlight http"><table><tr><td class="code"><pre><span class="line"><span class="attribute">Pragma</span>: no-cache</span><br></pre></td></tr></table></figure>
+<p>服务端响应添加Pragma: no-cache，浏览器表现行为和强制刷新类似。</p>
+<p>3.Expires<br>Expires 同样是HTTP/1.0标准中定义的一个header属性，表示为缓存到期的绝对时间。<br>我们也可以在html文件里直接使用:<br><figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">meta</span> <span class="attr">http-equiv</span>=<span class="string">"expires"</span> <span class="attr">content</span>=<span class="string">"Thu, 30 Nov 2017 11:17:26 GMT"</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>如何设置的时间已经过去，则会判断资源过期，向服务器发起请求。<br>另外，当Pragma禁用缓存，如果又给Expires定义一个还未到期的时间，那么Pragma字段的优先级会更高。<br>Expires有一个很大的弊端，就是它返回的是服务器的时间，但判断的时候用的却是客户端的时间，这就导致Expires很被动，因为用户有可能改变客户端的时间，导致缓存时间判断出错，这也是引入Cache-Control:max-age指令的原因之一。</p>
+<p>4.Last-Midified<br>主要表示为该资源的修改时间，在响应头里返回给客户端，在协商缓存和启发式缓存中发挥作用。</p>
+<p>Last-Modified有几个缺点：没法准确的判断资源是否真的修改了，比如某个文件在1秒内频繁更改了多次，根据Last-Modified的时间(单位是秒)是判断不出来的，再比如，某个资源只是修改了，但实际内容并没有发生变化，Last-Modified也无法判断出来，因此在HTTP/1.1中还推出了ETag这个字段。</p>
+<p>5.If-Modified-Since<br>当进入缓存协商阶段的时候，客户端会将第一次响应头的Last-Midified值存储到If-Modified-Since来发送给服务器验证资源是否修改过。若已修改，服务器返回200并在响应body里加上资源文件，若未修改则返回304告诉客户端仍然使用缓存资源并刷新缓存资源的过期时间。</p>
+<p>6.If-Unmodified-Since<br>这个字段字面意思和If-Modified-Since相反，但处理方式并不是相反的。如果文件在两次访问期间没有被修改则返回200和资源，如果文件修改了则返回状态码412(预处理错误)，一般用于断点下载时判断文件是否修改。</p>
+<p>7.ETAG<br>服务器可以通过某种自定的算法对资源生成一个唯一的标识(比如md5标识)，然后在浏览器第一次请求某一个URL时把这个标识放到响应头传到客户端。服务器端的返回状态会是200。ETag的值有可能包含一个 W/ 前缀，来提示应该采用弱比较算法。<br><figure class="highlight http"><table><tr><td class="code"><pre><span class="line"><span class="attribute">ETag</span>: abc-123456</span><br><span class="line"><span class="attribute">ETag</span>: W/abc-123456</span><br></pre></td></tr></table></figure></p>
+<p>8.If-None-Match<br>If-None-Match和If-Modified-Since同时存在的时候If-None-Match优先级更高。<br>当浏览器第二次请求这个URL的时候，根据HTTP协议规定，浏览器回把第一次ETag的值存储在If-None-Match里面发送给服务端来验证资源有没有修改。<br><figure class="highlight http"><table><tr><td class="code"><pre><span class="line"><span class="attribute">If-None-Match</span>: abc-123456</span><br></pre></td></tr></table></figure></p>
+<p>Get请求中，当且仅当服务器上没有任何资源的ETag属性值与这个首部中列出的相匹配的时候，服务器端会才返回所请求的资源，响应码为200。如果没有资源的ETag值相匹配，那么返回304状态码。</p>
+<p>9.If-Match<br>作用与 If-Unmodified-Since 类似，同时无法使用弱ETAG值。</p>
+<h5 id="服务端缓存控制"><a href="#服务端缓存控制" class="headerlink" title="服务端缓存控制"></a>服务端缓存控制</h5><p>当Expires和Cache-Control:max-age=xxx同时存在的时候取决于缓存服务器应用的HTTP版本。应用HTTP/1.1版本的服务器会优先处理max-age，忽略Expires，而应用HTTP/1.0版本的缓存服务器则会优先处理Expires而忽略max-age。接下来看下和缓存服务器相关的两个字段。</p>
+<h5 id="用户行为对缓存的影响"><a href="#用户行为对缓存的影响" class="headerlink" title="用户行为对缓存的影响"></a>用户行为对缓存的影响</h5><table>
+<thead>
+<tr>
+<th style="text-align:left">操作</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">打开新窗口</td>
+<td style="text-align:left">如果指定cache-control的值为private、no-cache、must-revalidate,那么打开新窗口访问时都会重新访问服务器。而如果指定了max-age值,那么在此值内的时间里就不会重新访问服务器,例如：Cache-control: max-age=5 表示当访问此网页后的5秒内不会去再次访问服务器。</td>
+</tr>
+<tr>
+<td style="text-align:left">在地址栏回车</td>
+<td style="text-align:left">如果值为private或must-revalidate,则只有第一次访问时会访问服务器,以后就不再访问。如果值为no-cache,那么每次都会访问。如果值为max-age,则在过期之前不会重复访问。</td>
+</tr>
+<tr>
+<td style="text-align:left">按后退按扭</td>
+<td style="text-align:left">如果值为private、must-revalidate、max-age,则不会重访问,而如果为no-cache,则每次都重复访问。</td>
+</tr>
+<tr>
+<td style="text-align:left">按刷新按扭</td>
+<td style="text-align:left">无论为何值,都会重复访问.（可能返回状态码：200、304，这个不同浏览器处理是不一样的，FireFox正常，Chrome则会启用缓存(200 from cache)）。</td>
+</tr>
+<tr>
+<td style="text-align:left">按强制刷新按钮</td>
+<td style="text-align:left">当做首次进入重新请求(返回状态码200)。</td>
+</tr>
+</tbody>
+</table>
+
+        </div>
+        
+        <div class="level is-size-7 is-uppercase">
+            <div class="level-start">
+                <div class="level-item">
+                    <span class="is-size-6 has-text-grey has-mr-7">#</span>
+                    <a class="has-link-grey -link" href="/tags/HTTP/">HTTP</a>
+                </div>
+            </div>
+        </div>
+        
+        
+        
+    </div>
+</div>
+
+
+
+
+
+<div class="card card-transparent">
+    <div class="level post-navigation is-flex-wrap is-mobile">
+        
+        <div class="level-start">
+            <a class="level level-item has-link-grey  article-nav-prev" href="/2019/03/15/Vue运行流程/">
+                <i class="level-item fas fa-chevron-left"></i>
+                <span class="level-item">Vue 运行流程</span>
+            </a>
+        </div>
+        
+        
+    </div>
+</div>
+
+
+</div>
+                
+
+
+
+
+<div class="column is-4-tablet is-3-desktop is-3-widescreen  has-order-1 column-left is-sticky">
+    
+        
+<div class="card widget">
+    <div class="card-content">
+        <nav class="level">
+            <div class="level-item has-text-centered" style="flex-shrink: 1">
+                <div>
+                    
+                    
+                        <figure class="image is-128x128 has-mb-6">
+                            <img class="" src="/images/avatar1.jpg" alt="Cut Picture Boy">
+                        </figure>
+                      
+                    
+                    <p class="is-size-4 is-block f-laro">
+                        Cut Picture Boy
+                    </p>
+                    
+                    
+                    
+                    <p class="is-size-6 is-flex is-flex-center has-text-grey f-laro">
+                        <i class="fas fa-map-marker-alt has-mr-7"></i>
+                        <span>Shenzhen China</span>
+                    </p>
+                    
+                </div>
+            </div>
+        </nav>
+        <nav class="level is-mobile">
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        文章
+                    </p>
+                    <a href="/archives">
+                        <p class="title has-text-weight-normal">
+                            7
+                        </p>
+                    </a>
+                </div>
+            </div>
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        分类
+                    </p>
+                    <a href="/categories">
+                        <p class="title has-text-weight-normal">
+                            0
+                        </p>
+                    </a>
+                </div>
+            </div>
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        标签
+                    </p>
+                    <a href="/tags">
+                        <p class="title has-text-weight-normal">
+                            4
+                        </p>
+                    </a>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="level">
+            <a class="level-item button is-link is-rounded" href="https://github.com/cutpictureboy" target="_blank" rel="noopener">
+                关注我</a>
+        </div>
+        
+        
+        
+    </div>
+</div>
+    
+        
+    
+        <div class="card widget">
+    <div class="card-content">
+        <div class="menu">
+        <h3 class="menu-label">
+            归档
+        </h3>
+        <ul class="menu-list">
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2020/07/">
+                <span class="level-start">
+                    <span class="level-item">七月 2020</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2020/04/">
+                <span class="level-start">
+                    <span class="level-item">四月 2020</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2019/03/">
+                <span class="level-start">
+                    <span class="level-item">三月 2019</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">4</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2018/05/">
+                <span class="level-start">
+                    <span class="level-item">五月 2018</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+        
+        </ul>
+        </div>
+    </div>
+</div>
+    
+        <div class="card widget">
+    <div class="card-content">
+        <div class="menu">
+            <h3 class="menu-label">
+                标签
+            </h3>
+            <div class="field is-grouped is-grouped-multiline">
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/HTTP/">
+                        <span class="tag">HTTP</span>
+                        <span class="tag is-grey">3</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/Vue/">
+                        <span class="tag">Vue</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/Web/">
+                        <span class="tag">Web</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/前端/">
+                        <span class="tag">前端</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+    
+    
+        <div class="column-right-shadow is-hidden-widescreen ">
+        
+        </div>
+    
+</div>
+
+                
+            </div>
+        </div>
+    </section>
+    <footer class="footer">
+    <div class="container">
+        <div class="level">
+            <div class="level-start has-text-centered-mobile">
+                <a class="footer-logo is-block has-mb-6" href="/">
+                
+                    <img src="/images/logo.svg" alt="HTTP缓存机制" height="28">
+                
+                </a>
+                <p class="is-size-7">
+                &copy; 2020 Cut Picture Boy&nbsp;
+                Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> & <a
+                        href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a>
+                
+                </p>
+            </div>
+            <div class="level-end">
+            
+            </div>
+        </div>
+    </div>
+</footer>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script>
+<script>moment.locale("zh-CN");</script>
+
+
+<script>
+var IcarusThemeSettings = {
+    site: {
+        url: 'https://cutpictureboy.github.io',
+        external_link: {"enable":true,"exclude":[]}
+    },
+    article: {
+        highlight: {
+            clipboard: true,
+            fold: 'unfolded'
+        }
+    }
+};
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script>
+
+
+
+
+
+<script src="/js/animation.js"></script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/js/lightgallery.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js" defer></script>
+<script src="/js/gallery.js" defer></script>
+
+
+
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/">Update
+            my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/outdatedbrowser@1.1.5/outdatedbrowser/outdatedbrowser.min.js" defer></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        });
+    });
+</script>
+
+
+
+
+
+<a id="back-to-top" title="回到顶端" href="javascript:;">
+    <i class="fas fa-chevron-up"></i>
+</a>
+<script src="/js/back-to-top.js" defer></script>
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/font.css">
+
+
+
+
+
+<script src="/js/main.js" defer></script>
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="想要查找什么..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+<script src="/js/insight.js" defer></script>
+<link rel="stylesheet" href="/css/search.css">
+<link rel="stylesheet" href="/css/insight.css">
+    
+</body>
+</html>
